@@ -1,83 +1,136 @@
 #include <SFML/Graphics.hpp>
+#include <iostream>
+#include <string>
 
-int main()
-{
-    // Create a window 800x600 pixels
-    // "sf::Style::Close" means it has a close button but can't be resized
-    sf::RenderWindow window(sf::VideoMode(1000, 800), "2 Player PingPong", sf::Style::Close);
+// Include our new modular header!
+#include "ConfigHandler.h" 
 
-    // Limit the game to 60 frames per second
-    window.setFramerateLimit(60);
+#define LOG(msg) std::cout << msg << std::endl
 
-    sf::Vector2f paddleSize(20.f, 100.f);
-    float paddleSpeed = 5.0f;
+// (Keep the Game class here for now, but remove the struct definition from it)
+class Game {
+private:
+    sf::RenderWindow mWindow;
+    GameConfig mConfig; 
 
-    sf::RectangleShape leftPaddle(paddleSize);
-    leftPaddle.setFillColor(sf::Color::White);
-    leftPaddle.setPosition(50.f, (800.f - paddleSize.y) / 2.f); 
+    sf::Texture mBackgroundTexture;
+    sf::Sprite mBackgroundSprite;
+    
+    sf::RectangleShape mLeftPaddle;
+    sf::RectangleShape mRightPaddle;
+    sf::CircleShape mBall;
+    sf::Vector2f mBallVelocity;
 
-    sf::RectangleShape rightPaddle(paddleSize);
-    rightPaddle.setFillColor(sf::Color::White);
-    rightPaddle.setPosition(930.f, (800.f - paddleSize.y) / 2.f);
-
-    sf::CircleShape ball(10.f);
-    ball.setFillColor(sf::Color::White);
-    ball.setPosition((1000.f - ball.getRadius() * 2) / 2.f, (800.f - ball.getRadius() * 2) / 2.f);
-    sf::Vector2f ballVelocity(4.f, 4.f); 
-
-    // The Game Loop
-    while (window.isOpen())
-    {
+    void processEvents() {
         sf::Event event;
-        while (window.pollEvent(event))
-        {
-            // Close the window if the 'X' button is pressed
-            if (event.type == sf::Event::Closed)
-                window.close();
-            
-            // Also close if Escape is pressed
-            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
-                window.close();
+        while (mWindow.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) mWindow.close();
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) mWindow.close();
         }
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && leftPaddle.getPosition().y > 0)
-            leftPaddle.move(0.f, -paddleSpeed);
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) && leftPaddle.getPosition().y + paddleSize.y < 800.f)
-            leftPaddle.move(0.f, paddleSpeed);
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && rightPaddle.getPosition().y > 0)
-            rightPaddle.move(0.f, -paddleSpeed);
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && rightPaddle.getPosition().y + paddleSize.y < 800.f)
-            rightPaddle.move(0.f, paddleSpeed);
-
-        ball.move(ballVelocity);
-
-        if (ball.getPosition().y <= 0 || ball.getPosition().y + ball.getRadius() * 2 >= 800.f)
-            ballVelocity.y = -ballVelocity.y;
-        
-        if (ball.getGlobalBounds().intersects(leftPaddle.getGlobalBounds()) ||
-            ball.getGlobalBounds().intersects(rightPaddle.getGlobalBounds()))
-        {
-            ballVelocity.x = -ballVelocity.x;
-        }
-
-        if (ball.getPosition().x < 0 || ball.getPosition().x > 1000.f)
-        {
-            ball.setPosition((1000.f - ball.getRadius() * 2) / 2.f, (800.f - ball.getRadius() * 2) / 2.f);
-            ballVelocity.x = -ballVelocity.x;
-        }
-
-        // Clear the screen to black
-        window.clear(sf::Color::Black);
-
-        window.draw(leftPaddle);
-        window.draw(rightPaddle);
-        window.draw(ball);
-        // (We will draw game objects here later)
-
-        // Display the frame
-        window.display();
     }
+
+    void handleInput() {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+            if (mLeftPaddle.getPosition().y > 0)
+                mLeftPaddle.move(0.f, -mConfig.paddleSpeed);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+            if (mLeftPaddle.getPosition().y + mConfig.paddleHeight < mConfig.windowHeight)
+                mLeftPaddle.move(0.f, mConfig.paddleSpeed);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
+            if (mRightPaddle.getPosition().y > 0)
+                mRightPaddle.move(0.f, -mConfig.paddleSpeed);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+            if (mRightPaddle.getPosition().y + mConfig.paddleHeight < mConfig.windowHeight)
+                mRightPaddle.move(0.f, mConfig.paddleSpeed);
+        }
+    }
+
+    void update() {
+        mBall.move(mBallVelocity);
+
+        if (mBall.getPosition().y <= 0 || mBall.getPosition().y + mBall.getRadius() * 2 >= mConfig.windowHeight) {
+            mBallVelocity.y = -mBallVelocity.y;
+        }
+
+        if (mBall.getGlobalBounds().intersects(mLeftPaddle.getGlobalBounds()) ||
+            mBall.getGlobalBounds().intersects(mRightPaddle.getGlobalBounds())) {
+            mBallVelocity.x = -mBallVelocity.x;
+        }
+
+        if (mBall.getPosition().x < 0 || mBall.getPosition().x > mConfig.windowWidth) {
+            resetBall();
+        }
+    }
+
+    void render() {
+        mWindow.clear(sf::Color::Black);
+        mWindow.draw(mBackgroundSprite);
+        mWindow.draw(mLeftPaddle);
+        mWindow.draw(mRightPaddle);
+        mWindow.draw(mBall);
+        mWindow.display();
+    }
+
+    void resetBall() {
+        float centerX = (mConfig.windowWidth - mBall.getRadius() * 2) / 2.f;
+        float centerY = (mConfig.windowHeight - mBall.getRadius() * 2) / 2.f;
+        mBall.setPosition(centerX, centerY);
+        mBallVelocity.x = -mBallVelocity.x; 
+    }
+
+public:
+    Game(const GameConfig& config) 
+        : mConfig(config), 
+          mWindow(sf::VideoMode(config.windowWidth, config.windowHeight), config.windowTitle, sf::Style::Close) 
+    {
+        mWindow.setFramerateLimit(mConfig.frameRate);
+
+        if (!mBackgroundTexture.loadFromFile(mConfig.bgImagePath)) {
+            LOG("Warning: Failed to load background: " + mConfig.bgImagePath);
+        } else {
+            mBackgroundSprite.setTexture(mBackgroundTexture);
+            float scaleX = static_cast<float>(mConfig.windowWidth) / mBackgroundTexture.getSize().x;
+            float scaleY = static_cast<float>(mConfig.windowHeight) / mBackgroundTexture.getSize().y;
+            mBackgroundSprite.setScale(scaleX, scaleY);
+        }
+
+        sf::Vector2f size(mConfig.paddleWidth, mConfig.paddleHeight);
+        mLeftPaddle.setSize(size);
+        mLeftPaddle.setFillColor(sf::Color::White);
+        float leftY = (mConfig.leftPaddleStartPos.y == -1.f) ? (mConfig.windowHeight - size.y)/2.f : mConfig.leftPaddleStartPos.y;
+        mLeftPaddle.setPosition(mConfig.leftPaddleStartPos.x, leftY);
+
+        mRightPaddle.setSize(size);
+        mRightPaddle.setFillColor(sf::Color::White);
+        float rightY = (mConfig.rightPaddleStartPos.y == -1.f) ? (mConfig.windowHeight - size.y)/2.f : mConfig.rightPaddleStartPos.y;
+        mRightPaddle.setPosition(mConfig.rightPaddleStartPos.x, rightY);
+
+        mBall.setRadius(mConfig.ballRadius);
+        mBall.setFillColor(sf::Color::White);
+        mBallVelocity = mConfig.ballSpeed;
+        resetBall();
+    }
+
+    void run() {
+        while (mWindow.isOpen()) {
+            processEvents();
+            handleInput();
+            update();
+            render();
+        }
+    }
+};
+
+int main() {
+    // 1. Call the function from ConfigHandler
+    GameConfig mySettings = loadConfigFromToml("config.toml");
+
+    // 2. Pass settings to Game
+    Game game(mySettings);
+    game.run();
 
     return 0;
 }

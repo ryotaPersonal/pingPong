@@ -1,0 +1,23 @@
+# Pong Game Configuration
+
+[window]
+width = 1200
+height = 900
+title = "2 Player Pong - TOML Edition"
+framerate = 60
+background_image = "background.jpg"
+
+[paddles]
+width = 20.0
+height = 100.0
+speed = 8.0
+# Set y to -1.0 to auto-center
+left_start_x = 50.0
+left_start_y = -1.0
+right_start_x = 1130.0
+right_start_y = -1.0
+
+[ball]
+radius = 12.0
+speed_x = 6.0
+speed_y = 6.0
