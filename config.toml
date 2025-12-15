@@ -8,6 +8,9 @@ framerate = 60
 background_image = "background.jpg"
 font_path = "font.ttf"
 
+[audio]
+hit_sound = "hit.ogg"
+
 [paddles]
 width = 20.0
 height = 100.0

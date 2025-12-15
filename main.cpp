@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <iostream>
 #include <string>
 
@@ -26,6 +27,9 @@ private:
     sf::Text mRightScoreText;
     int mLeftScore = 0;
     int mRightScore = 0;
+
+    sf::SoundBuffer mHitSoundBuffer;
+    sf::Sound mHitSound;
 
     void processEvents() {
         sf::Event event;
@@ -68,6 +72,7 @@ private:
             // Increase Score
             mLeftScore++; 
             mLeftScoreText.setString(std::to_string(mLeftScore));
+            mHitSound.play();
             
             // Optional: Move ball slightly out of paddle to prevent "sticking" glitch
             mBall.setPosition(mLeftPaddle.getPosition().x + mConfig.paddleWidth + 1, mBall.getPosition().y);
@@ -80,6 +85,7 @@ private:
             // Increase Score
             mRightScore++;
             mRightScoreText.setString(std::to_string(mRightScore));
+            mHitSound.play();
             
             // Optional: Move ball slightly out
             mBall.setPosition(mRightPaddle.getPosition().x - mBall.getRadius()*2 - 1, mBall.getPosition().y);
@@ -138,6 +144,14 @@ public:
 
         if (!mFont.loadFromFile(mConfig.fontPath)) {
             LOG("Warning: Failed to load font: " + mConfig.fontPath);
+        }
+
+        if (!mHitSoundBuffer.loadFromFile(mConfig.hitSoundPath)) {
+            LOG("Warning: Failed to load hit sound: " + mConfig.hitSoundPath);
+        } else {
+            mHitSound.setBuffer(mHitSoundBuffer);
+            mHitSound.setVolume(100.f);
+            mHitSound.setPitch(1.2f);
         }
 
         sf::Vector2f size(mConfig.paddleWidth, mConfig.paddleHeight);

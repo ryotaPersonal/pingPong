@@ -25,6 +25,8 @@ struct GameConfig {
     // Ball
     float ballRadius = 10.f;
     sf::Vector2f ballSpeed = {4.f, 4.f};
+
+    std::string hitSoundPath = "hit.ogg";
 };
 
 // 2. Declare the function (Promise that it exists)

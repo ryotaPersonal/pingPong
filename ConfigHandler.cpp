@@ -36,6 +36,8 @@ GameConfig loadConfigFromToml(const std::string& filepath) {
         float by = tbl["ball"]["speed_y"].value_or(4.0f);
         config.ballSpeed = {bx, by};
 
+        config.hitSoundPath = tbl["ball"]["hit_sound"].value_or("hit.ogg");
+
         LOG("[CONFIG HANDLER] Loaded config.toml!");
 
     } catch (const toml::parse_error& err) {
