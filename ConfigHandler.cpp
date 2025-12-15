@@ -17,6 +17,7 @@ GameConfig loadConfigFromToml(const std::string& filepath) {
         config.windowTitle = tbl["window"]["title"].value_or("Pong Game");
         config.frameRate = tbl["window"]["framerate"].value_or(60);
         config.bgImagePath = tbl["window"]["background_image"].value_or("background.jpg");
+        config.fontPath = tbl["window"]["font_path"].value_or("font.ttf");
 
         // Paddles
         config.paddleWidth = tbl["paddles"]["width"].value_or(20.0f);

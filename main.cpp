@@ -21,6 +21,12 @@ private:
     sf::CircleShape mBall;
     sf::Vector2f mBallVelocity;
 
+    sf::Font mFont;
+    sf::Text mLeftScoreText;
+    sf::Text mRightScoreText;
+    int mLeftScore = 0;
+    int mRightScore = 0;
+
     void processEvents() {
         sf::Event event;
         while (mWindow.pollEvent(event)) {
@@ -55,11 +61,32 @@ private:
             mBallVelocity.y = -mBallVelocity.y;
         }
 
-        if (mBall.getGlobalBounds().intersects(mLeftPaddle.getGlobalBounds()) ||
-            mBall.getGlobalBounds().intersects(mRightPaddle.getGlobalBounds())) {
-            mBallVelocity.x = -mBallVelocity.x;
+        // Check Left Paddle
+        if (mBall.getGlobalBounds().intersects(mLeftPaddle.getGlobalBounds())) {
+            mBallVelocity.x = -mBallVelocity.x; // Bounce
+            
+            // Increase Score
+            mLeftScore++; 
+            mLeftScoreText.setString(std::to_string(mLeftScore));
+            
+            // Optional: Move ball slightly out of paddle to prevent "sticking" glitch
+            mBall.setPosition(mLeftPaddle.getPosition().x + mConfig.paddleWidth + 1, mBall.getPosition().y);
         }
 
+        // Check Right Paddle
+        if (mBall.getGlobalBounds().intersects(mRightPaddle.getGlobalBounds())) {
+            mBallVelocity.x = -mBallVelocity.x; // Bounce
+            
+            // Increase Score
+            mRightScore++;
+            mRightScoreText.setString(std::to_string(mRightScore));
+            
+            // Optional: Move ball slightly out
+            mBall.setPosition(mRightPaddle.getPosition().x - mBall.getRadius()*2 - 1, mBall.getPosition().y);
+        }
+
+        // Left/Right Walls (Reset, but keep scores? Or reset scores?)
+        // For now, we keep scores accumulating.
         if (mBall.getPosition().x < 0 || mBall.getPosition().x > mConfig.windowWidth) {
             resetBall();
         }
@@ -68,9 +95,14 @@ private:
     void render() {
         mWindow.clear(sf::Color::Black);
         mWindow.draw(mBackgroundSprite);
+
         mWindow.draw(mLeftPaddle);
         mWindow.draw(mRightPaddle);
         mWindow.draw(mBall);
+
+        mWindow.draw(mLeftScoreText);
+        mWindow.draw(mRightScoreText);
+
         mWindow.display();
     }
 
@@ -79,6 +111,13 @@ private:
         float centerY = (mConfig.windowHeight - mBall.getRadius() * 2) / 2.f;
         mBall.setPosition(centerX, centerY);
         mBallVelocity.x = -mBallVelocity.x; 
+    }
+
+    void setupText(sf::Text& text, float x, float y) {
+        text.setFont(mFont);
+        text.setCharacterSize(40);
+        text.setFillColor(sf::Color::Red);
+        text.setPosition(x, y);
     }
 
 public:
@@ -97,6 +136,10 @@ public:
             mBackgroundSprite.setScale(scaleX, scaleY);
         }
 
+        if (!mFont.loadFromFile(mConfig.fontPath)) {
+            LOG("Warning: Failed to load font: " + mConfig.fontPath);
+        }
+
         sf::Vector2f size(mConfig.paddleWidth, mConfig.paddleHeight);
         mLeftPaddle.setSize(size);
         mLeftPaddle.setFillColor(sf::Color::White);
@@ -112,6 +155,9 @@ public:
         mBall.setFillColor(sf::Color::White);
         mBallVelocity = mConfig.ballSpeed;
         resetBall();
+
+        setupText(mLeftScoreText, mConfig.windowWidth / 4.f, 10.f);
+        setupText(mRightScoreText, 3 * mConfig.windowWidth / 4.f, 10.f);
     }
 
     void run() {

@@ -6,6 +6,7 @@ height = 900
 title = "2 Player Pong - TOML Edition"
 framerate = 60
 background_image = "background.jpg"
+font_path = "font.ttf"
 
 [paddles]
 width = 20.0

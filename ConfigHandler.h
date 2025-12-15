@@ -12,6 +12,7 @@ struct GameConfig {
     std::string windowTitle = "Pong (Default)";
     int frameRate = 60;
     std::string bgImagePath = "background.jpg";
+    std::string fontPath = "font.ttf";
 
     // Paddles
     float paddleWidth = 20.f;
